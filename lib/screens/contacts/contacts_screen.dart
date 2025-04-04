@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/contact/contact_bloc.dart';
 import '../../models/contact.dart';
+import '../../bloc/auth/auth_bloc.dart';
 
 class ContactsScreen extends StatelessWidget {
   const ContactsScreen({super.key});
@@ -13,30 +14,33 @@ class ContactsScreen extends StatelessWidget {
         if (authState is! Authenticated) {
           return const Center(child: Text('Please sign in to view contacts'));
         }
-        
+
         return BlocProvider(
-          create: (context) => ContactBloc(authState.user.uid)..add(LoadContacts()),
-      child: BlocConsumer<ContactBloc, ContactState>(
-        listener: (context, state) {
-          if (state is ContactError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          }
-        },
-        builder: (context, state) {
-          if (state is ContactLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is ContactsLoaded) {
-            return _ContactsList(contacts: state.contacts);
-          }
-          if (state is ContactError) {
-            return Center(child: Text(state.message));
-          }
-          return const Center(child: Text('No contacts found'));
-        },
-      ),
+          create:
+              (context) => ContactBloc(authState.user.uid)..add(LoadContacts()),
+          child: BlocConsumer<ContactBloc, ContactState>(
+            listener: (context, state) {
+              if (state is ContactError) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(state.message)));
+              }
+            },
+            builder: (context, state) {
+              if (state is ContactLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is ContactsLoaded) {
+                return _ContactsList(contacts: state.contacts);
+              }
+              if (state is ContactError) {
+                return Center(child: Text(state.message));
+              }
+              return const Center(child: Text('No contacts found'));
+            },
+          ),
+        );
+      },
     );
   }
 }

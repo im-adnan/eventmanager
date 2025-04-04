@@ -1,7 +1,7 @@
 import 'package:googleapis/calendar/v3.dart' as calendar;
 import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/src/client.dart';
+import 'package:http/http.dart';
 import '../models/event.dart';
 
 class GoogleCalendarService {
