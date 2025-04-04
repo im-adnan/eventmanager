@@ -1,5 +1,4 @@
 import 'package:googleapis/calendar/v3.dart' as calendar;
-import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart';
 import '../models/event.dart';
@@ -17,7 +16,6 @@ class GoogleCalendarService {
     final googleUser = await _googleSignIn.signIn();
     if (googleUser == null) throw Exception('Google Sign In failed');
 
-    final googleAuth = await googleUser.authentication;
     final authHeaders = await googleUser.authHeaders;
 
     final client = GoogleAuthClient(authHeaders);
