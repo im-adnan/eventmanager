@@ -88,9 +88,14 @@ class _ContactsList extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.more_vert),
                   onPressed: () {
+                    final contactBloc = context.read<ContactBloc>();
                     showModalBottomSheet(
                       context: context,
-                      builder: (context) => _ContactActions(contact: contact),
+                      builder:
+                          (context) => BlocProvider.value(
+                            value: contactBloc,
+                            child: _ContactActions(contact: contact),
+                          ),
                     );
                   },
                 ),

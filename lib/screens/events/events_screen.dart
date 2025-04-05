@@ -84,9 +84,14 @@ class _EventsList extends StatelessWidget {
               trailing: IconButton(
                 icon: const Icon(Icons.more_vert),
                 onPressed: () {
+                  final eventBloc = context.read<EventBloc>();
                   showModalBottomSheet(
                     context: context,
-                    builder: (context) => _EventActions(event: event),
+                    builder:
+                        (context) => BlocProvider.value(
+                          value: eventBloc,
+                          child: _EventActions(event: event),
+                        ),
                   );
                 },
               ),
