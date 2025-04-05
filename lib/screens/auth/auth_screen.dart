@@ -35,7 +35,23 @@ class AuthScreen extends StatelessWidget {
                     onPressed: () {
                       context.read<AuthBloc>().add(SignInWithGooglePressed());
                     },
-                    icon: Image.asset('assets/google_logo.png', height: 24),
+                    icon: Image.network(
+                      'https://www.gstatic.com/marketing-cms/assets/images/d5/dc/cfe9ce8b4425b410b49b7f2dd3f3/g.webp=s96-fcrop64=1,00000000ffffffff-rw',
+                      height: 24,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.error);
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        );
+                      },
+                    ),
                     label: const Text('Sign in with Google'),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 50),
