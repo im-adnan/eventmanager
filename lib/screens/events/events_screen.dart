@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/contact/contact_bloc.dart';
+import '../../models/contact.dart';
+import '../../services/google_calendar_service.dart';
 import '../../bloc/event/event_bloc.dart';
 import '../../models/event.dart';
 
@@ -192,6 +195,17 @@ class _EventDialogState extends State<_EventDialog> {
     if (widget.event != null) {
       _attendees.addAll(widget.event!.attendees);
     }
+
+    // Add current user as attendee
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthBloc>().state;
+      if (authState is Authenticated) {
+        final userEmail = authState.user.email;
+        if (userEmail != null && !_attendees.contains(userEmail)) {
+          setState(() => _attendees.add(userEmail));
+        }
+      }
+    });
   }
 
   @override
@@ -322,6 +336,31 @@ class _EventDialogState extends State<_EventDialog> {
                         }
                       },
                     ),
+                    ActionChip(
+                      label: const Icon(Icons.contacts, size: 20),
+                      onPressed: () async {
+                        final contact = await showDialog<Contact>(
+                          context: context,
+                          builder:
+                              (context) => BlocProvider(
+                                create:
+                                    (context) => ContactBloc(
+                                      context.read<AuthBloc>().state
+                                              is Authenticated
+                                          ? (context.read<AuthBloc>().state
+                                                  as Authenticated)
+                                              .user
+                                              .uid
+                                          : '',
+                                    )..add(LoadContacts()),
+                                child: const _ContactPickerDialog(),
+                              ),
+                        );
+                        if (contact != null && contact.email != null) {
+                          _addAttendee(contact.email!);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -351,6 +390,20 @@ class _EventDialogState extends State<_EventDialog> {
 
             if (widget.event == null) {
               context.read<EventBloc>().add(AddEvent(event));
+
+              GoogleCalendarService().createEvent(
+                event,
+                title: _titleController.text,
+                description: _descriptionController.text,
+                location: _locationController.text,
+                startTime: _startTime,
+                endTime: _endTime,
+                attendees: _attendees,
+                organizerEmail:
+                    (context.read<AuthBloc>().state as Authenticated)
+                        .user
+                        .email!,
+              );
             } else {
               context.read<EventBloc>().add(UpdateEvent(event));
             }
@@ -360,6 +413,48 @@ class _EventDialogState extends State<_EventDialog> {
           child: Text(widget.event == null ? 'Add' : 'Save'),
         ),
       ],
+    );
+  }
+}
+
+class _ContactPickerDialog extends StatelessWidget {
+  const _ContactPickerDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ContactBloc, ContactState>(
+      builder: (context, state) {
+        if (state is ContactsLoaded) {
+          return AlertDialog(
+            title: const Text('Select Contact'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: state.contacts.length,
+                itemBuilder: (context, index) {
+                  final contact = state.contacts[index];
+                  return ListTile(
+                    title: Text(contact.name),
+                    subtitle: Text(contact.email ?? ''),
+                    onTap: () => Navigator.pop(context, contact),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+            ],
+          );
+        }
+        return const AlertDialog(
+          title: Text('Loading contacts...'),
+          content: CircularProgressIndicator(),
+        );
+      },
     );
   }
 }

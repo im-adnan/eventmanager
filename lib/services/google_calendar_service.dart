@@ -22,7 +22,16 @@ class GoogleCalendarService {
     _calendarApi = calendar.CalendarApi(client as Client);
   }
 
-  Future<String> createEvent(Event event) async {
+  Future<String> createEvent(
+    Event event, {
+    required String title,
+    required String description,
+    required String location,
+    required DateTime startTime,
+    required DateTime endTime,
+    required List<String> attendees,
+    required String organizerEmail,
+  }) async {
     if (_calendarApi == null) await init();
 
     final calendarEvent =
