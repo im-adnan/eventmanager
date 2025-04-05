@@ -84,7 +84,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignInWithGooglePressed event,
     Emitter<AuthState> emit,
   ) async {
-    final context = NavigationService.navigatorKey.currentContext!;
     try {
       emit(AuthLoading());
       final googleUser = await _googleSignIn.signIn();
@@ -94,6 +93,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
 
       final googleAuth = await googleUser.authentication;
+      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
+        emit(AuthError('Failed to get Google authentication tokens'));
+        return;
+      }
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -103,7 +107,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         credential,
       );
       emit(Authenticated(userCredential.user!));
-      Navigator.of(context).pushReplacementNamed('/home');
+
+      final context = NavigationService.navigatorKey.currentContext;
+      if (context != null) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
     } catch (e) {
       emit(AuthError(e.toString()));
     }
