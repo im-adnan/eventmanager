@@ -111,7 +111,16 @@ class EventBloc extends Bloc<EventEvent, EventState> {
       emit(EventLoading());
 
       // Create event in Google Calendar
-      final googleEventId = await _calendarService.createEvent(event.event);
+      final googleEventId = await _calendarService.createEvent(
+        event.event,
+        title: event.event.title,
+        description: event.event.description,
+        location: event.event.location,
+        startTime: event.event.startTime,
+        endTime: event.event.endTime,
+        attendees: event.event.attendees,
+        organizerEmail: _userId,
+      );
 
       // Create event in Firestore with Google Calendar ID
       final eventWithGoogleId = event.event.copyWith(
@@ -147,6 +156,21 @@ class EventBloc extends Bloc<EventEvent, EventState> {
           .collection('events')
           .doc(event.event.id)
           .update(event.event.toMap());
+
+      add(LoadEvents());
+
+      // Delete event from Google Calendar
+      if (event.event.googleCalendarEventId != null) {
+        await _calendarService.deleteEvent(event.event.googleCalendarEventId!);
+      }
+
+      // Delete event from Firestore
+      await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('events')
+          .doc(event.event.id)
+          .delete();
 
       add(LoadEvents());
     } catch (e) {
