@@ -92,9 +92,14 @@ class _ContactsList extends StatelessWidget {
   }
 
   void _showContactDialog(BuildContext context, [Contact? contact]) {
+    final contactBloc = context.read<ContactBloc>();
     showDialog(
       context: context,
-      builder: (context) => _ContactDialog(contact: contact),
+      builder:
+          (dialogContext) => BlocProvider.value(
+            value: contactBloc,
+            child: _ContactDialog(contact: contact),
+          ),
     );
   }
 }

@@ -1,3 +1,6 @@
+import 'package:eventmanager/screens/chat/chat_screen.dart';
+import 'package:eventmanager/screens/contacts/contacts_screen.dart';
+import 'package:eventmanager/screens/events/events_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/auth/auth_bloc.dart';
@@ -13,9 +16,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   static const List<Widget> _pages = [
-    Center(child: Text('Events')), // TODO: Replace with EventsScreen
-    Center(child: Text('Contacts')), // TODO: Replace with ContactsScreen
-    Center(child: Text('Chat')), // TODO: Replace with ChatScreen
+    EventsScreen(),
+    ContactsScreen(),
+    ChatScreen(),
   ];
 
   void _onItemTapped(int index) {

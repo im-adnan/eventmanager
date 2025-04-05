@@ -9,6 +9,9 @@ class Contact extends Equatable {
   final String? photoUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool hasApp;
+  final bool isOnline;
+  final String? fcmToken;
 
   const Contact({
     required this.id,
@@ -18,6 +21,9 @@ class Contact extends Equatable {
     this.photoUrl,
     required this.createdAt,
     required this.updatedAt,
+    this.hasApp = false,
+    this.isOnline = false,
+    this.fcmToken,
   });
 
   factory Contact.fromFirestore(DocumentSnapshot doc) {
@@ -30,6 +36,9 @@ class Contact extends Equatable {
       photoUrl: data['photoUrl'] as String?,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      hasApp: data['hasApp'] as bool? ?? false,
+      isOnline: data['isOnline'] as bool? ?? false,
+      fcmToken: data['fcmToken'] as String?,
     );
   }
 
@@ -41,6 +50,9 @@ class Contact extends Equatable {
       'photoUrl': photoUrl,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'hasApp': hasApp,
+      'isOnline': isOnline,
+      'fcmToken': fcmToken,
     };
   }
 

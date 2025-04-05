@@ -104,9 +104,14 @@ class _EventsList extends StatelessWidget {
   }
 
   void _showEventDialog(BuildContext context, [Event? event]) {
+    final eventBloc = context.read<EventBloc>();
     showDialog(
       context: context,
-      builder: (context) => _EventDialog(event: event),
+      builder:
+          (dialogContext) => BlocProvider.value(
+            value: eventBloc,
+            child: _EventDialog(event: event),
+          ),
     );
   }
 }
