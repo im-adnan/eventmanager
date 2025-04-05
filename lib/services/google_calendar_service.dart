@@ -1,22 +1,20 @@
 import 'package:googleapis/calendar/v3.dart' as calendar;
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart';
 import '../models/event.dart';
 
 class GoogleCalendarService {
-  final GoogleSignIn _googleSignIn;
+  final FirebaseAuth _firebaseAuth;
   calendar.CalendarApi? _calendarApi;
 
-  GoogleCalendarService()
-    : _googleSignIn = GoogleSignIn(
-        scopes: ['email', 'https://www.googleapis.com/auth/calendar'],
-      );
+  GoogleCalendarService() : _firebaseAuth = FirebaseAuth.instance;
 
   Future<void> init() async {
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) throw Exception('Google Sign In failed');
+    final user = _firebaseAuth.currentUser;
+    if (user == null) throw Exception('Firebase Auth failed');
 
-    final authHeaders = await googleUser.authHeaders;
+    final idToken = await user.getIdToken();
+    final authHeaders = {'Authorization': 'Bearer $idToken'};
 
     final client = GoogleAuthClient(authHeaders);
     _calendarApi = calendar.CalendarApi(client as Client);
