@@ -1,6 +1,10 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:eventmanager/services/navigation_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 // Events
 abstract class AuthEvent extends Equatable {
@@ -49,10 +53,17 @@ class AuthError extends AuthState {
 // BLoC
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _firebaseAuth;
+  final GoogleSignIn _googleSignIn;
 
-  AuthBloc() : _firebaseAuth = FirebaseAuth.instance, super(AuthInitial()) {
+  AuthBloc()
+    : _firebaseAuth = FirebaseAuth.instance,
+      _googleSignIn = GoogleSignIn(),
+      super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
-    on<SignInWithGooglePressed>(_onSignInWithGooglePressed);
+    on<SignInWithGooglePressed>(
+      _onSignInWithGooglePressed
+          as EventHandler<SignInWithGooglePressed, AuthState>,
+    );
     on<SignInWithApplePressed>(_onSignInWithApplePressed);
     on<SignOutRequested>(_onSignOutRequested);
   }
@@ -73,13 +84,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignInWithGooglePressed event,
     Emitter<AuthState> emit,
   ) async {
+    final context = NavigationService.navigatorKey.currentContext!;
     try {
       emit(AuthLoading());
-      // Implement OAuth flow manually for Google
-      // Obtain tokens and use FirebaseAuth to sign in
-      // Example: final credential = GoogleAuthProvider.credential(...);
-      // final userCredential = await _firebaseAuth.signInWithCredential(credential);
-      // emit(Authenticated(userCredential.user!));
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        emit(Unauthenticated());
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
+      emit(Authenticated(userCredential.user!));
+      Navigator.of(context).pushReplacementNamed('/home');
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -89,13 +113,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignInWithApplePressed event,
     Emitter<AuthState> emit,
   ) async {
+    final context = NavigationService.navigatorKey.currentContext!;
     try {
       emit(AuthLoading());
-      // Implement OAuth flow manually for Apple
-      // Obtain tokens and use FirebaseAuth to sign in
-      // Example: final oauthCredential = OAuthProvider('apple.com').credential(...);
-      // final userCredential = await _firebaseAuth.signInWithCredential(oauthCredential);
-      // emit(Authenticated(userCredential.user!));
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        oauthCredential,
+      );
+      emit(Authenticated(userCredential.user!));
+      Navigator.of(context).pushReplacementNamed('/home');
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -107,6 +144,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       await _firebaseAuth.signOut();
+      await _googleSignIn.signOut();
       emit(Unauthenticated());
     } catch (e) {
       emit(AuthError(e.toString()));

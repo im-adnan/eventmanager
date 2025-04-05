@@ -37,6 +37,8 @@ dependencies:
   # UI
   flutter_svg: ^2.0.9
   cached_network_image: ^3.3.0
+  google_sign_in: ^6.3.0
+  sign_in_with_apple: ^6.1.4
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer

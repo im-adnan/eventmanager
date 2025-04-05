@@ -45,3 +45,8 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Add the Google Play services auth dependency for Google Sign In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+}
