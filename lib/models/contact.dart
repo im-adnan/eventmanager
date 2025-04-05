@@ -7,6 +7,9 @@ class Contact extends Equatable {
   final String email;
   final String? phone;
   final String? photoUrl;
+
+  String get uid =>
+      id; // Getter to maintain compatibility with chat implementation
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool hasApp;

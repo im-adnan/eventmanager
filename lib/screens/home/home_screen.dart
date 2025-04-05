@@ -15,11 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = [
-    EventsScreen(),
-    ContactsScreen(),
-    ChatScreen(),
-  ];
+  static const List<Widget> _pages = [EventsScreen(), ContactsScreen()];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -47,8 +43,10 @@ class _HomeScreenState extends State<HomeScreen> {
         onDestinationSelected: _onItemTapped,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.event), label: 'Events'),
-          NavigationDestination(icon: Icon(Icons.contacts), label: 'Contacts'),
-          NavigationDestination(icon: Icon(Icons.chat), label: 'Chat'),
+          NavigationDestination(
+            icon: Icon(Icons.contacts),
+            label: 'Contacts & Chat',
+          ),
         ],
       ),
     );

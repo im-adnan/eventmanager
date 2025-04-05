@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ChatMessage extends Equatable {
   final String id;
   final String senderId;
+  final String receiverId;
   final String senderName;
   final String content;
   final DateTime timestamp;
@@ -13,6 +14,7 @@ class ChatMessage extends Equatable {
   const ChatMessage({
     required this.id,
     required this.senderId,
+    required this.receiverId,
     required this.senderName,
     required this.content,
     required this.timestamp,
@@ -25,6 +27,7 @@ class ChatMessage extends Equatable {
     return ChatMessage(
       id: doc.id,
       senderId: data['senderId'] as String,
+      receiverId: data['receiverId'] as String,
       senderName: data['senderName'] as String,
       content: data['content'] as String,
       timestamp: (data['timestamp'] as Timestamp).toDate(),
@@ -36,6 +39,7 @@ class ChatMessage extends Equatable {
   Map<String, dynamic> toMap() {
     return {
       'senderId': senderId,
+      'receiverId': receiverId,
       'senderName': senderName,
       'content': content,
       'timestamp': Timestamp.fromDate(timestamp),
@@ -53,6 +57,7 @@ class ChatMessage extends Equatable {
       timestamp: timestamp,
       imageUrl: imageUrl ?? this.imageUrl,
       isRead: isRead ?? this.isRead,
+      receiverId: '',
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:eventmanager/models/contact.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -6,17 +7,23 @@ import '../../bloc/chat/chat_bloc.dart';
 import '../../models/chat_message.dart';
 
 class ChatScreen extends StatelessWidget {
-  const ChatScreen({super.key});
+  final Contact contact;
+  const ChatScreen({super.key, required this.contact});
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! Authenticated) {
+      return const Scaffold(
+        body: Center(child: Text('Please sign in to view messages')),
+      );
+    }
+
     return BlocProvider(
       create:
-          (context) => ChatBloc(
-            context.read<AuthBloc>().state is Authenticated
-                ? (context.read<AuthBloc>().state as Authenticated).user.uid
-                : '',
-          )..add(LoadMessages()),
+          (context) =>
+              ChatBloc(authState.user.uid)
+                ..add(LoadMessagesForContact(contact.uid)),
       child: BlocConsumer<ChatBloc, ChatState>(
         listener: (context, state) {
           if (state is ChatError) {
@@ -30,21 +37,42 @@ class ChatScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is ChatLoaded) {
-            return Column(
-              children: [
-                Expanded(
-                  child: _MessageList(
-                    messages: state.messages,
-                    currentUserId:
-                        context.read<AuthBloc>().state is Authenticated
-                            ? (context.read<AuthBloc>().state as Authenticated)
-                                .user
-                                .uid
-                            : '',
-                  ),
+            return Scaffold(
+              appBar: AppBar(
+                title: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage:
+                          contact.photoUrl != null
+                              ? NetworkImage(contact.photoUrl!)
+                              : null,
+                      child:
+                          contact.photoUrl == null
+                              ? Text(contact.name[0].toUpperCase())
+                              : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(contact.name),
+                  ],
                 ),
-                const _MessageInput(),
-              ],
+              ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: _MessageList(
+                      messages: state.messages,
+                      currentUserId:
+                          context.read<AuthBloc>().state is Authenticated
+                              ? (context.read<AuthBloc>().state
+                                      as Authenticated)
+                                  .user
+                                  .uid
+                              : '',
+                    ),
+                  ),
+                  const _MessageInput(),
+                ],
+              ),
             );
           }
           return const Center(child: Text('No messages'));
@@ -140,6 +168,7 @@ class _MessageInputState extends State<_MessageInput> {
       senderName: authState.user.displayName ?? 'Anonymous',
       content: text,
       timestamp: DateTime.now(),
+      receiverId: '',
     );
 
     context.read<ChatBloc>().add(SendMessage(message));

@@ -1,3 +1,4 @@
+import 'package:eventmanager/screens/chat/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/contact/contact_bloc.dart';
@@ -70,14 +71,30 @@ class _ContactsList extends StatelessWidget {
             ),
             title: Text(contact.name),
             subtitle: Text(contact.email),
-            trailing: IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) => _ContactActions(contact: contact),
-                );
-              },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chat),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(contact: contact),
+                      ),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) => _ContactActions(contact: contact),
+                    );
+                  },
+                ),
+              ],
             ),
           );
         },

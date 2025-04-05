@@ -13,6 +13,15 @@ abstract class ChatEvent extends Equatable {
 
 class LoadMessages extends ChatEvent {}
 
+class LoadMessagesForContact extends ChatEvent {
+  final String contactId;
+
+  LoadMessagesForContact(this.contactId);
+
+  @override
+  List<Object?> get props => [contactId];
+}
+
 class SendMessage extends ChatEvent {
   final ChatMessage message;
 
@@ -81,6 +90,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _userId = userId,
       super(ChatInitial()) {
     on<LoadMessages>(_onLoadMessages);
+    on<LoadMessagesForContact>(_onLoadMessagesForContact);
     on<SendMessage>(_onSendMessage);
     on<MessageReceived>(_onMessageReceived);
     on<MarkMessageAsRead>(_onMarkMessageAsRead);
@@ -106,6 +116,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
                 int.parse(data['timestamp']),
               ),
               isRead: false,
+              receiverId: '',
             ),
           ),
         );
@@ -147,6 +158,40 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final messages =
           messagesSnapshot.docs
               .map((doc) => ChatMessage.fromFirestore(doc))
+              .toList();
+
+      emit(ChatLoaded(messages));
+    } catch (e) {
+      emit(ChatError(e.toString()));
+    }
+  }
+
+  Future<void> _onLoadMessagesForContact(
+    LoadMessagesForContact event,
+    Emitter<ChatState> emit,
+  ) async {
+    try {
+      emit(ChatLoading());
+      final messagesSnapshot =
+          await _firestore
+              .collection('messages')
+              .where(
+                'participants',
+                arrayContainsAny: [_userId, event.contactId],
+              )
+              .orderBy('timestamp', descending: true)
+              .get();
+
+      final messages =
+          messagesSnapshot.docs
+              .map((doc) => ChatMessage.fromFirestore(doc))
+              .where(
+                (message) =>
+                    (message.senderId == _userId &&
+                        message.receiverId == event.contactId) ||
+                    (message.senderId == event.contactId &&
+                        message.receiverId == _userId),
+              )
               .toList();
 
       emit(ChatLoaded(messages));
